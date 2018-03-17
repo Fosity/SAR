@@ -1,0 +1,235 @@
+{% extends 'carry/layout.html' %}
+{% load static %}
+{% load carry_form %}
+{% load rbac %}
+
+{% block css %}
+{% endblock %}
+
+{% block content %}
+<div class="">
+    <div id="dropdowntotal" class="clearfix" style="margin-left: 100px">
+        <div class="pull-left " id="dropdown">
+            <div class="btn-group">
+                <button class="btn btn-default dropdown-toggle btn-rounded btn-lg" type="button" id="dropdownMenuIDC"
+                        data-toggle="dropdown"
+                        aria-haspopup="true" aria-expanded="true" name="00" title="IDC">
+                    IDC
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenuIDC" id="dropdownMenuIDCul">
+                    </ul>
+            </div>
+        </div>
+        <div class="pull-left" id="dropdown">
+            <div class="btn-group">
+                <button class="btn btn-default dropdown-toggle btn-rounded btn-lg" type="button" id="dropdownMenugroup"
+                        data-toggle="dropdown"
+                        aria-haspopup="true" aria-expanded="true" name="00" title="组">
+                    组
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenugroup" id="dropdownMenugroupul">
+                </ul>
+            </div>
+        </div>
+        <div class="pull-left" id="dropdown">
+            <div class="btn-group">
+                <button class="btn btn-default dropdown-toggle btn-rounded btn-lg" type="button" id="dropdownMenuhost"
+                        data-toggle="dropdown"
+                        aria-haspopup="true" aria-expanded="true" name="00" title="host">
+                    host
+                    <span class="caret"> </span>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenuhost" id="dropdownMenuhostul">
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="center-block" style="margin-top: 20px;margin-left: 360px"><button id="dropdownsubmit" class="btn btn-default">确定</button></div>
+    <hr>
+    <div class="panel">
+        <div class="panel-heading">
+            <div class="panel-control">
+                <span class="label label-default">Online</span>
+            </div>
+            <h3 class="panel-title">系统正在运行</h3>
+        </div>
+        <div class="pad-all">
+            <ul class="list-inline mar-no text-right">
+                <li>
+                    <div class="pad-hor">
+                        <span class="text-lg text-semibold text-main" id="cpuUseNum"></span>
+                        <p class="text-muted mar-no">
+                            <small>系统CPU状态</small>
+                        </p>
+                    </div>
+                </li>
+                <li>
+                    <div class="pad-hor">
+                        <span class="text-lg text-semibold text-main" id="memoryUseNum"></span>
+                        <p class="text-muted mar-no">
+                            <small>系统内存状态</small>
+                        </p>
+                    </div>
+                </li>
+                <li>
+                    <div class="pad-hor">
+                        <span class="text-lg text-semibold text-main" id="DayTime"></span>
+                        <p class="text-muted mar-no">
+                            <small>当前日期</small>
+                        </p>
+                    </div>
+                </li>
+                <li>
+                    <div class="pad-hor">
+                        <span class="text-lg text-semibold text-main" id="Hour"></span>
+                        <p class="text-muted mar-no">
+                            <small>当前时间</small>
+                        </p>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <div id="realtime-chart" class="flot-full-content" style="height:300px;">
+            <!--Flot chart placement-->
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src={% static "carry/plugins/flot-charts/js/jquery.flot.min.js" %}></script>
+<script src={% static "carry/plugins/flot-charts/js/jquery.flot.resize.min.js" %}></script>
+<script src={% static "carry/plugins/flot-charts/js/jquery.flot.time.js" %}></script>
+<script src={% static "carry/plugins/flot-charts/js/date.js" %}></script>
+<script>
+    $(function () {
+        /*向后端发送数据，生成动态图*/
+        function getData(IDCname, Groupname, hostname) {
+            $.ajax({
+                url: '/backend/use_ajax/',
+                type: 'POST',
+                data: {
+                    'IDC': IDCname, {# 如果是00，返回all #}
+                    'Group': Groupname, {# 如果是00，返回None #}
+                    'Host': hostname, {# 如果是00，返回None #}
+                    'csrfmiddlewaretoken': "{{ csrf_token }}"
+                },
+                dataType: 'JSON',
+                success: function (arg) {
+                    $.plot("#realtime-chart", arg.data, {
+                        series: {
+                            lines: {
+                                lineWidth: 1,
+                                show: true,
+                                fill: true,
+                                fillColor: "#d8d9d9"
+                            },
+                            color: '#cccccc',
+                            shadowSize: 0	// Drawing is faster without shadows
+                        },
+                        yaxis: {
+                            min: 0,
+                            max: 110,
+                            ticks: 30,
+                            show: false
+                        },
+                        grid: {
+                            hoverable: true,
+                            clickable: true,
+                            borderWidth: 0
+                        },
+                        tooltip: false,
+                        tooltipOpts: {
+                            defaultTheme: false
+                        },
+                        xaxis: {mode: "time"}
+                    });
+                    $('#cpuUseNum').text(arg.cpu_avg_num + '%');
+                    $('#memoryUseNum').text(arg.memory_avg_num + '%');
+                    $('#DayTime').text(arg.day_time);
+                    $('#Hour').text(arg.hour_time);
+                    setTimeout(getData, arg.updateInterval);
+                }
+            });
+        };
+
+        /*动态生成下拉菜单框*/
+        function createtag(data, obj) {
+            obj.empty();
+            $.each(data, function (k, v) {
+                var litag = document.createElement('li');
+                var atag = document.createElement('a');
+                $(atag).text(v.text);
+                $(atag).attr('name', v.id);
+                $(litag).append(atag);
+                obj.append(litag);
+            });
+        };
+        /*动态生成下拉菜单，并且绑定事件，在button中显示当前选定内容*/
+        $('#dropdowntotal').on('click', 'a,button', function () {
+            var nowThisname = $(this).attr('name');
+            var nowThistext = $(this).text();
+            $(this).parent().parent().prev('button').attr('name', nowThisname);
+            $(this).parent().parent().prev('button').addClass('btn-primary');
+            $(this).parent().parent().prev('button').text(nowThistext);
+            if ($(this).parent().parent().prev('button').is($('#dropdownMenuIDC'))) {
+                var button = $(this).parent().parent().parent().parent().siblings().find('.btn');
+                $.each(button, function (k, v) {
+                    $(v).html($(v).attr('title')+ '<span class="caret"></span>');
+                    $(v).attr('name', '00');
+                    $(v).removeClass('btn-primary');
+                    $(v).addClass('btn-default');
+                });
+            }
+            else if ($(this).parent().parent().prev('button').is($('#dropdownMenugroup'))) {
+                var button = $(this).parent().parent().parent().parent().next().find('.btn');
+                button.html(button.attr('title')+ '<span class="caret"></span>');
+                button.attr('name', '00');
+                button.removeClass('btn-primary');
+                button.addClass('btn-default');
+            }
+            var IDCname = $("#dropdownMenuIDC").attr('name');
+            var Groupname = $("#dropdownMenugroup").attr('name');
+            var hostname = $("#dropdownMenuhost").attr('name');
+            $.ajax({
+                url: '/backend/use_select/',
+                type: 'POST',
+                dataType: 'JSON',
+                data: {
+                    'IDC': IDCname, {# 如果是00，返回all #}
+                    'Group': Groupname, {# 如果是00，返回None #}
+                    'Host': hostname, {# 如果是00，返回None #}
+                    'csrfmiddlewaretoken': "{{ csrf_token }}"
+                },
+                success: function (arg) {
+                    /*arg={'IDC':[{'nid':'','text':''},{}],'Group':[{'nid':'','text':''},{}],'Host':[{'nid':'','text':''},{}]}*/
+                    /*<li><a v.name>v.text</a></li>*/
+                    createtag(arg.IDC, $("#dropdownMenuIDCul"));
+                    createtag(arg.Group, $("#dropdownMenugroupul"));
+                    createtag(arg.Host, $("#dropdownMenuhostul"));
+
+                }
+            })
+        });
+        /*点击确定后，发送ajax到后端，提取此host的cpu，以及mem的数据*/
+        $('#dropdownsubmit').click(function () {
+            /*获取select name内容 需要传入后端,默认为00，选择后改变值*/
+            var IDCname = $("#dropdownMenuIDC").attr('name');
+            var Groupname = $("#dropdownMenugroup").attr('name');
+            var hostname = $("#dropdownMenuhost").attr('name');
+            if (IDCname!='00' && IDCname!='00' &&hostname!='00'){
+                 getData(IDCname, Groupname, hostname);
+            }
+            else {
+                window.location.reload();
+            }
+        });
+
+    })
+    // Set up the control widget
+</script>
+
+{% endblock %}
