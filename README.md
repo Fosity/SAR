@@ -11,4 +11,4 @@ service-sar
   3.client接受数据，保留时间默认10分钟。
   4.基于flot-charts，生成动态状态图
   5.参考Paramiko https://github.com/paramiko/paramiko/blob/master/demos/interactive.py 在与主机连接时，添加操作记录。实现
-  6.实现任务处理功能：前端提交任务，服务器接受任务，再通过
+  6.实现任务处理功能：前端提交任务，服务器接受任务,存入数据库，再通过subprocess.open调用脚本，实现异步执行数据库中任务。
