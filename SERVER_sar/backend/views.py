@@ -106,7 +106,7 @@ def use_select(request):
 def host_list(request):
     """主机列表起始页"""
     account_obj = models.Account.objects.filter(user_id=request.session.get('user_info').get('nid')).first()
-    return render(request, 'hostlist.html', {'account_obj': account_obj})
+    return render(request, 'hostlist.html', {'account_obj': account_obj,'run_to_url':settings.RUNTOURL})
 
 
 def get_host_list(request):

@@ -94,6 +94,10 @@
             });//end post
         }
 
+        function GetUrl() {
+            window.open("https://"+document.domain + ':{{ run_to_url }}')
+        }
+
         function GetHostlist(gid, self) {
             $.get("{% url 'get_host_list' %}", {'gid': gid}, function (callback) {
                 var data = JSON.parse(callback);
@@ -101,7 +105,7 @@
                 $.each(data, function (index, i) {
                     var tr = "<tr><td>" + i.host__host_name + "</td><td>" + i.host__ip_addr + "</td><td>" + i.host__idc__name
                         + "</td><td>" + i.host__port + "</td><td>" + i.host_user__username + "</td><td><a class='btn btn-info' " +
-                        "onclick=GetToken(this,'" + i.id + "')>Token</a>   <a class='btn btn-info'>Login</a></td><td ></td></tr>";
+                        "onclick=GetToken(this,'" + i.id + "')>Token</a>   <a class='btn btn-info' onclick=GetUrl()>Login</a></td><td ></td></tr>";
                     trs += tr
                 });
                 $("#hostlist").html(trs);
@@ -109,7 +113,8 @@
             });//end get
             $(self).addClass("active").siblings().removeClass('active');
 
-        }
+        };
+
 
     </script>
 {% endblock %}
