@@ -79,8 +79,11 @@ class HostUserAdmin(carry.BaseCarryModal):
 
 class HostAdmin(carry.BaseCarryModal):
     list_display = ['host_name', 'ip_addr', 'port', 'enabled', BasefuncModal.edit_field]
+
+
 class TokenAdmin(carry.BaseCarryModal):
-    list_display = ['host_user_bind', 'val', 'account', 'expire', 'date',BasefuncModal.edit_field]
+    list_display = ['host_user_bind', 'val', 'account', 'expire', 'date', BasefuncModal.edit_field]
+
 
 carry.site.register(models.Host, HostAdmin)
 carry.site.register(models.HostUser, HostUserAdmin)

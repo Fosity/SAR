@@ -7,7 +7,7 @@ urlpatterns = [
     url(r'^report.html$', views.use_report),
     url(r'^use_ajax/$', views.use_ajax),
     url(r'^use_select/$', views.use_select),
-    url(r'^hostlist/$', views.host_list,name="host_list"),
+    url(r'^hostlist/$', views.host_list, name="host_list"),
     url(r'^api/hostlist/$', views.get_host_list, name="get_host_list"),
     url(r'^api/token/$', views.get_token, name="get_token"),
 

@@ -27,8 +27,8 @@ def use_ajax(request):
     group_id = request.POST.get('Group')
     host_id = request.POST.get('Host')
     now_time = datetime.datetime.now()
-    begin_cpu_time = now_time - datetime.timedelta(minutes=settings.CPU_TIME)  # 10分钟之前的时间
-    begin_mem_time = now_time - datetime.timedelta(minutes=settings.MEMORY_TIME)  # 10分钟之前的时间
+    begin_cpu_time = now_time - datetime.timedelta(minutes=settings.CPU_TIME)  # 分钟之前的时间
+    begin_mem_time = now_time - datetime.timedelta(minutes=settings.MEMORY_TIME)  # 分钟之前的时间
     cpu_list = list(
         models.Cpu.objects.filter(cpu_title_info__host_info_id=host_id, cpu_title_info__host_info__idc_id=idc_id,
                                   cpu_title_info__host_info__hostuserbind__hostgroup=group_id).filter(

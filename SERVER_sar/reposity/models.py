@@ -1,9 +1,14 @@
 from django.db import models
+
 from carry import models as carry_models
+
+
 class IDC(models.Model):
-    name = models.CharField('机房',max_length=64,unique=True)
+    name = models.CharField('机房', max_length=64, unique=True)
+
     def __str__(self):
         return self.name
+
 
 class Host(models.Model):
     """存储所有主机信息"""
@@ -12,15 +17,19 @@ class Host(models.Model):
     port = models.IntegerField(default=22)
     idc = models.ForeignKey("IDC")
     enabled = models.BooleanField(default=True)
+
     def __str__(self):
-        return "%s-%s" %(self.host_name,self.ip_addr)
+        return "%s-%s" % (self.host_name, self.ip_addr)
+
 
 class HostGroup(models.Model):
     """主机组"""
-    name = models.CharField(max_length=64,unique=True)
-    host_user_binds  = models.ManyToManyField("HostUserBind")
+    name = models.CharField(max_length=64, unique=True)
+    host_user_binds = models.ManyToManyField("HostUserBind")
+
     def __str__(self):
         return self.name
+
 
 class HostUser(models.Model):
     """存储远程主机的用户信息
@@ -28,71 +37,85 @@ class HostUser(models.Model):
     root abc
     root sfsfs
     """
-    auth_type_choices = ((0,'ssh-password'),(1,'ssh-key'))
+    auth_type_choices = ((0, 'ssh-password'), (1, 'ssh-key'))
     auth_type = models.SmallIntegerField(choices=auth_type_choices)
     username = models.CharField(max_length=32)
-    password = models.CharField(blank=True,null=True,max_length=128)
+    password = models.CharField(blank=True, null=True, max_length=128)
 
     def __str__(self):
-        return "%s-%s-%s" %(self.get_auth_type_display(),self.username,self.password)
+        return "%s-%s-%s" % (self.get_auth_type_display(), self.username, self.password)
 
     class Meta:
-        unique_together = ('username','password')
+        unique_together = ('username', 'password')
+
+
 class Task(models.Model):
     """存储任务信息"""
-    task_type_choices = ((0,'cmd'),(1,'file_transfer'))
+    task_type_choices = ((0, 'cmd'), (1, 'file_transfer'))
     task_type = models.SmallIntegerField(choices=task_type_choices)
     content = models.TextField("任务内容")
-    timeout = models.IntegerField("任务超时",default=50)
+    timeout = models.IntegerField("任务超时", default=50)
     account = models.ForeignKey("Account")
     date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return "%s-%s-%s" %(self.id,self.get_task_type_display(),self.content)
+        return "%s-%s-%s" % (self.id, self.get_task_type_display(), self.content)
+
+
 class TaskLog(models.Model):
     task = models.ForeignKey("Task")
     host_user_bind = models.ForeignKey("HostUserBind")
     result = models.TextField(default='init....')
     date = models.DateTimeField(auto_now_add=True)
-    status_choices = ((0,'成功'),(1,'失败'),(2,'超时'),(3,'初始化'))
+    status_choices = ((0, '成功'), (1, '失败'), (2, '超时'), (3, '初始化'))
     status = models.SmallIntegerField(choices=status_choices)
 
     class Meta:
-        unique_together = ('task','host_user_bind')
+        unique_together = ('task', 'host_user_bind')
+
+
 class Token(models.Model):
     host_user_bind = models.ForeignKey("HostUserBind")
-    val = models.CharField(max_length=128,unique=True)
+    val = models.CharField(max_length=128, unique=True)
     account = models.ForeignKey("Account")
-    expire = models.IntegerField("超时时间(s)",default=300)
+    expire = models.IntegerField("超时时间(s)", default=300)
     date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return "%s-%s" %(self.host_user_bind,self.val)
+        return "%s-%s" % (self.host_user_bind, self.val)
+
+
 class HostUserBind(models.Model):
     """绑定主机和用户"""
     host = models.ForeignKey("Host")
     host_user = models.ForeignKey("HostUser")
 
     def __str__(self):
-        return "%s-%s-%s" %(self.id,self.host,self.host_user)
+        return "%s-%s-%s" % (self.id, self.host, self.host_user)
 
     class Meta:
-        unique_together = ('host','host_user')
+        unique_together = ('host', 'host_user')
+
+
 class AuditLog(models.Model):
     """审计日志"""
     session = models.ForeignKey("SessionLog")
     cmd = models.TextField()
     date = models.DateTimeField(auto_now_add=True)
+
     def __str__(self):
-        return "%s-%s" %(self.session,self.cmd)
+        return "%s-%s" % (self.session, self.cmd)
+
+
 class SessionLog(models.Model):
     account = models.ForeignKey("Account")
     host_user_bind = models.ForeignKey("HostUserBind")
     start_date = models.DateTimeField(auto_now_add=True)
-    end_date = models.DateTimeField(blank=True,null=True)
+    end_date = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
-        return "%s-%s" %(self.account,self.host_user_bind)
+        return "%s-%s" % (self.account, self.host_user_bind)
+
 
 class Account(models.Model):
     """堡垒机账户
@@ -104,24 +127,29 @@ class Account(models.Model):
     user = models.OneToOneField(carry_models.User)
     name = models.CharField(max_length=64)
 
-    host_user_binds = models.ManyToManyField("HostUserBind",blank=True)
-    host_groups = models.ManyToManyField("HostGroup",blank=True)
+    host_user_binds = models.ManyToManyField("HostUserBind", blank=True)
+    host_groups = models.ManyToManyField("HostGroup", blank=True)
 
     def __str__(self):
         return self.name
+
+
 class Cpu(models.Model):
     ct_time = models.DateTimeField(auto_now_add=True)
     cpu_title_info = models.ForeignKey('CpuName')
     cpu_num_info = models.IntegerField('CPU百分比')
 
     def __str__(self):
-        return "时间：{}  百分比:  {}%".format(self.ct_time.strftime("%H:%M:%S"),self.cpu_num_info)
+        return "时间：{}  百分比:  {}%".format(self.ct_time.strftime("%H:%M:%S"), self.cpu_num_info)
+
 
 class CpuName(models.Model):
     title = models.CharField('CPU名称', max_length=32)
     host_info = models.ForeignKey('Host')
+
     def __str__(self):
-        return "%s-%s"%(self.host_info.host_name,self.title)
+        return "%s-%s" % (self.host_info.host_name, self.title)
+
 
 class Memory(models.Model):
     host_info = models.ForeignKey('Host')
@@ -129,4 +157,4 @@ class Memory(models.Model):
     Memory_time = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return "时间：{}  百分比:  {}%".format(self.Memory_time.strftime("%H:%M:%S"),self.me_num)
+        return "时间：{}  百分比:  {}%".format(self.Memory_time.strftime("%H:%M:%S"), self.me_num)
