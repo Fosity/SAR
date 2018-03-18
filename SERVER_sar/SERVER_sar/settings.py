@@ -125,10 +125,10 @@ STATICFILES_DIRS = (
 AUTH_KEY = "xxxxxxxx"  # API请求加密
 DATA_KEY = b'xxxxxxxxxxxxxxxx'  # AES 需要16位字节 数据加密
 
-CPU_TIME = 1  # 1 min
-MEMORY_TIME = 1  # 1 min
-UPDATE_TIME = 1 * 1000  # 1s
-
+CPU_TIME = 1  # 1 min Cpu页面上显示的时间间隔。
+MEMORY_TIME = 1  # 1 min Memory页面上显示的时间间隔。
+UPDATE_TIME = 1 * 1000  # 1s 前端页面更新时间
+DELETEDBTIME = 10  # 10 min  api接受数据后，数据库保留的时间。
 # ############################## RBAC权限相关配置开始 ##############################
 # session中保存权限信息的Key
 RBAC_PERMISSION_URL_SESSION_KEY = "rbac_permission_url_session_key"
@@ -156,3 +156,12 @@ RBAC_THEME = "default"
 
 ###############################页面 配置信息 ####################################
 PER_PAGE_NUM = 15  ##页面显示个数
+
+
+
+SESSION_TRACKER_SCRIPT = os.path.join(BASE_DIR,'audit/backend/session_tracker.sh')
+
+MULTI_TASK_SCRIPT = os.path.join(BASE_DIR,'multitask.py')
+
+FILE_UPLOADS = os.path.join(BASE_DIR,'uploads')
+FILE_DOWNLOADS = os.path.join(BASE_DIR,'downloads')

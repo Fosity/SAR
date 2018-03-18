@@ -1,24 +1,22 @@
 # -*- coding: utf-8 -*-  
-import base64
-from binascii import hexlify
-import getpass
 import os
-import select
 import socket
 import sys
-import time
 import traceback
-from paramiko.py3compat import input
-from reposity import models
+
 import paramiko
+
+from reposity import models
 
 try:
     import interactive
 except ImportError:
     from . import interactive
 
+
 def manual_auth(t, username, password):
     t.auth_password(username, password)
+
 
 def ssh_session(bind_host_user, user_obj):
     # now connect

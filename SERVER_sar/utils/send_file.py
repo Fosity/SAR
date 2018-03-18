@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
-import zipfile
 import os
+import zipfile
 from wsgiref.util import FileWrapper
+
+
 def send_zipfile(request, task_id, file_path):
     """
     Create a ZIP file on disk and transmit it in chunks of 8KB,
@@ -17,4 +19,4 @@ def send_zipfile(request, task_id, file_path):
 
     wrapper = FileWrapper(open(zip_file_name, 'rb'))
 
-    return wrapper,zip_file_name
+    return wrapper, zip_file_name

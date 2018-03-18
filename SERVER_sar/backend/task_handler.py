@@ -1,14 +1,18 @@
 # -*- coding: utf-8 -*-  
 
 import json
-from reposity import models
 import subprocess
+
 from django.conf import settings
 from django.db.transaction import atomic
 
+from reposity import models
+
+
 class Task(object):
     """处理批量任务，包括命令和文件传输"""
-    def __init__(self,request):
+
+    def __init__(self, request):
         self.request = request
         self.errors = []
         self.task_data = None
@@ -26,11 +30,10 @@ class Task(object):
                     return True
                 self.errors.append({'invalid_argument': 'cmd or host_list is empty.'})
             elif self.task_data.get('task_type') == 'file_transfer':
-                return True #self.errors.append({'invalid_argument':'cmd or host_list is empty.'})
+                return True
             else:
-                self.errors.append({'invalid_argument':'task_type is invalid.'})
-        self.errors.append({'invalid_data':'task_data is not exist '})
-
+                self.errors.append({'invalid_argument': 'task_type is invalid.'})
+        self.errors.append({'invalid_data': 'task_data is not exist '})
 
     def run(self):
         """start task , and return task id """
@@ -41,12 +44,11 @@ class Task(object):
     @atomic
     def cmd(self):
         """批量任务"""
-        #print("run multi task.....")
         task_obj = models.Task.objects.create(
-            task_type = 0,
-            account = self.request.user.account ,
-            content = self.task_data.get('cmd'),
-            #host_user_binds =
+            task_type=0,
+            account=self.request.user.account,
+            content=self.task_data.get('cmd'),
+
         )
         tasklog_objs = []
         host_ids = set(self.task_data.get("selected_host_ids"))
@@ -54,35 +56,25 @@ class Task(object):
             tasklog_objs.append(
                 models.TaskLog(task_id=task_obj.id,
                                host_user_bind_id=host_id,
-                               status = 3
+                               status=3
                                )
             )
-        models.TaskLog.objects.bulk_create(tasklog_objs,100)
-        #task_obj.host_user_binds.add(1,2,3)
-        #task_obj.host_user_binds.add(*self.task_data.get('selected_host_ids'))
+        models.TaskLog.objects.bulk_create(tasklog_objs, 100)
 
-        #执行任务
-
-        # for host_id in self.task_data.get('selected_host_ids'):
-        #     t = Thread(target=self.run_cmd,args=(host_id,self.task_data.get('cmd')))
-        #     t.start()
-        #
-        cmd_str = "python %s %s" % (settings.MULTI_TASK_SCRIPT,task_obj.id)
+        cmd_str = "python %s %s" % (settings.MULTI_TASK_SCRIPT, task_obj.id)
         multitask_obj = subprocess.Popen(cmd_str,
                                          stdout=subprocess.PIPE,
-                                         stderr=subprocess.PIPE )
-        # print("task result :",multitask_obj.stdout.read(),multitask_obj.stderr.read().decode('gbk'))
-        # print(cmd_str)
-        return  task_obj
+                                         stderr=subprocess.PIPE)
+
+        return task_obj
 
     def file_transfer(self):
         """批量文件"""
 
         task_obj = models.Task.objects.create(
-            task_type = 1,
-            account = self.request.user.account ,
-            content = json.dumps(self.task_data),
-            #host_user_binds =
+            task_type=1,
+            account=self.request.user.account,
+            content=json.dumps(self.task_data),
         )
         tasklog_objs = []
         host_ids = set(self.task_data.get("selected_host_ids"))
@@ -90,15 +82,14 @@ class Task(object):
             tasklog_objs.append(
                 models.TaskLog(task_id=task_obj.id,
                                host_user_bind_id=host_id,
-                               status = 3
+                               status=3
                                )
             )
-        models.TaskLog.objects.bulk_create(tasklog_objs,100)
+        models.TaskLog.objects.bulk_create(tasklog_objs, 100)
 
-        cmd_str = "python %s %s" % (settings.MULTI_TASK_SCRIPT,task_obj.id)
+        cmd_str = "python %s %s" % (settings.MULTI_TASK_SCRIPT, task_obj.id)
         multitask_obj = subprocess.Popen(cmd_str,
                                          stdout=subprocess.PIPE,
-                                         stderr=subprocess.PIPE )
-        # print("task result :",multitask_obj.stdout.read(),multitask_obj.stderr.read().decode('gbk'))
-        # print(cmd_str)
-        return  task_obj
+                                         stderr=subprocess.PIPE)
+
+        return task_obj
